@@ -1,81 +1,97 @@
-const mongoose=require("mongoose");
-const validator=require("validator");
-const jwt=require("jsonwebtoken");
+const mongoose = require("mongoose");
+const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const userSchema = new mongoose.Schema(
+  {
+    firstName: {
+      type: String,
+      required: true,
+      minLength: 3,
+      maxLength: 50,
+    },
+    lastName: {
+      type: String,
+      minLength: 3,
+      maxLength: 50,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("InValid Email Id");
+        }
+      },
+    },
+    password: {
+      type: String,
+      required: true,
+      validate(value) {
+        if (!validator.isStrongPassword(value)) {
+          throw new Error(
+            " the password must contains min 8 chars and atleast 1Uppercase, 1Lowercase, 1Number, 1Special Char"
+          );
+        }
+      },
+    },
+    age: {
+      type: Number,
+      min: 18,
+    },
+    gender: {
+      type: String,
+      validate(value) {
+        if (!["male", "female", "others"].includes(value)) {
+          throw new Error("Gender is Invalid ..");
+        }
+      },
+    },
+    photoId: {
+      type: String,
+      default: "https://i.pinimg.com/736x/2f/15/f2/2f15f2e8c688b3120d3d26467b06330c.jpg",
+      validate(value) {
+        if (!validator.isURL(value)) {
+          throw new Error("inValid Photo URL");
+        }
+      },
+    },
+    description: {
+      type: String,
+      default: "write your own description .. !! ",
+    },
+    skills: {
+      type: [String],
+      validate(value) {
+        if (value.length > 10) {
+          throw new Error("The Skills Must be less Then 10");
+        }
+      },
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-
-const userSchema=mongoose.Schema(
-    {
-    firstName:{
-        type: String,
-        required: true,
-        unique : true,
-        lowercase: true,
-        trim : true,
-        minLength: 4,
-    },
-    lastName:{
-        type: String
-    },
-    emailId:{
-        type: String,
-        unique: true,
-        required: true,
-        validate(value){
-            if(!validator.isEmail(value)){
-                throw new Error("Email is not valid " +value);
-            }
-        }
-    },
-    password:{
-        type: String,
-        validate(value){
-            if(!validator.isStrongPassword(value)){
-                throw new Error("Please enter a strong password " +value);
-            }
-        }
-    },
-    age:{
-        type: Number,
-        min: 18
-    },
-    gender:{
-        type: String,
-        validate(value){
-            if(!["male", "female", "others"].include(value)){
-                throw new Error("Gender data is not valid")
-            }
-        }
-    },
-    about:{
-        type: String, 
-        default: "This is default about"
-    },
-    photoUrl:{
-        type: String, 
-        default: "Image URL"
-    },
-    skills:{
-        type: [String]
-    }
-},
-{
-    timestamps: true
+userSchema.methods.getJwt = async function(){
+  const user =this;
+  const token = await jwt.sign({_id: user._id} , "@devTinder$098",{expiresIn:'7d'});
+  return token;
 }
-)
 
-userSchema.methods.getJWT = function () {  // No need for async
+userSchema.methods.validatePassword = async function(inputPassword){
     const user = this;
-    const token = jwt.sign({ _id: user._id }, "Dev@Tinder$790", { expiresIn: "1h" });
-    return token;
-};
-
-
-userSchema.methods.validatePassword=async function(passwordInputByUser){
-    const user=this;
-    const passwordHash=user.password;
-    const isPasswordValid=await bcrypt.compare(passwordInputByUser, passwordHash);
+    const password = user.password;
+    const isPasswordValid = await bcrypt.compare(inputPassword,password);
+    
     return isPasswordValid;
-}
-const userModel=mongoose.model("User", userSchema);
 
-module.exports=userModel;
+
+
+}
+
+module.exports = mongoose.model("User", userSchema);

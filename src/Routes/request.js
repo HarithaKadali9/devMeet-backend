@@ -1,6 +1,6 @@
 const express = require("express");
 const requestRouter = express.Router();
-const User = require("../models/User");
+const User = require("../models/user");
 
 const { userAuth } = require("../middlewares/Auth");
 const ConnectionRequest = require("../models/ConnectionRequest");
@@ -63,6 +63,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth,async (req, res) 
 requestRouter.post("/request/review/:status/:requestId",userAuth, async(req,res)=>{
   try {
     const loggedInUser = req.user;
+    console.log("loggedInUser")
     const {status,requestId} = req.params;
     const allowedStatus = ["accepted","rejected"];
     if(!allowedStatus.includes(status)){
@@ -91,7 +92,7 @@ requestRouter.post("/request/review/:status/:requestId",userAuth, async(req,res)
       data,
     });
   } catch (error) {
-    res.status(400).send("ERROR: " + err.message);
+    res.status(400).send("ERROR: " + error.message);
   }
 });
 

@@ -2,9 +2,9 @@ const express = require("express");
 const userRoute = express.Router();
 const { userAuth } = require("../middlewares/Auth");
 const ConnectionRequest = require("../models/ConnectionRequest");
-const User = require("../models/User");
+const User = require("../models/user");
 const USER_ALLOWED_FIELDS =
-  "firstName lastName age about skills photoId gender";
+  "firstName lastName age about skills photoId gender description";
 
 userRoute.get("/user/requests/received", userAuth, async (req, res) => {
   try {
